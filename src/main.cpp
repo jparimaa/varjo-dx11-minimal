@@ -88,8 +88,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPWSTR /*l
     const std::vector<varjo_Viewport> viewports = createViewportsWithViewDescription(session);
 
     varjo_SwapChain* colorSwapChain = nullptr;
-    int width = viewports.back().x + viewports.back().width;
-    int height = viewports.back().y + viewports.back().height;
+    int width = viewports[0].width + viewports[1].width;
+    int height = viewports[0].height + viewports[2].height;
 
     DX11Renderer renderer;
     renderer.createDevice(adapter);

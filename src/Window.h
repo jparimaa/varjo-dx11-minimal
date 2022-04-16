@@ -6,7 +6,7 @@
 class Window
 {
 public:
-    static const int swapChainLength = 2;
+    static const int swapChainLength = 3;
 
     Window();
     ~Window();

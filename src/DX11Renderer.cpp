@@ -1,8 +1,6 @@
 #include "DX11Renderer.h"
 #include "Log.h"
-#include "ShaderCode.h"
 #include "Utility.h"
-#include "VertexData.h"
 
 #include <Varjo_d3d11.h>
 
@@ -89,14 +87,10 @@ void DX11Renderer::createWindow(HINSTANCE hInstance, int nCmdShow)
 
 void DX11Renderer::createDefaultShader()
 {
-    ID3DBlob* vertexBlob = getVertexShader();
-    ID3DBlob* pixelBlob = getPixelShader();
     const std::vector<D3D11_INPUT_ELEMENT_DESC> inputLayout{
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
         {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0}};
-    m_shader.init(m_device, vertexBlob, pixelBlob, inputLayout);
-    vertexBlob->Release();
-    pixelBlob->Release();
+    m_shader.init(m_device, inputLayout);
 
     D3D11_RASTERIZER_DESC rasterizerDesc{};
     rasterizerDesc.FillMode = D3D11_FILL_SOLID;

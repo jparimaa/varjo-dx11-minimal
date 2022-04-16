@@ -10,8 +10,7 @@ public:
     Shader();
     ~Shader();
 
-    void init(ID3D11Device* device, ID3DBlob* vertexBlob, ID3DBlob* pixelBlob, const std::vector<D3D11_INPUT_ELEMENT_DESC>& inputLayout);
-    void init(ID3D11Device* device, ID3DBlob* vertexBlob, const std::vector<D3D11_INPUT_ELEMENT_DESC>& inputLayout);
+    void init(ID3D11Device* device, const std::vector<D3D11_INPUT_ELEMENT_DESC>& inputLayout);
     ID3D11VertexShader* getVertexShader();
     ID3D11PixelShader* getPixelShader();
     ID3D11InputLayout* getIputLayout();

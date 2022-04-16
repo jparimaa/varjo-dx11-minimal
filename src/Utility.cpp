@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Utility.h"
+#include <glm/gtc/type_ptr.hpp>
 #include <winerror.h>
 #include <comdef.h>
 #include <iostream>
@@ -65,4 +66,15 @@ bool isEscDown()
         }
     }
     return false;
+}
+
+glm::mat4 toGlmMat4(const double* matrix)
+{
+    glm::mat4 result;
+    float* dst = glm::value_ptr(result);
+    for (int i = 0; i < 16; ++i)
+    {
+        dst[i] = static_cast<float>(matrix[i]);
+    }
+    return result;
 }

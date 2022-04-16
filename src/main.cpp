@@ -10,7 +10,6 @@
 #include <Varjo_math.h>
 
 #include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 #include <wrl/client.h>
 #include <stdlib.h>
@@ -24,22 +23,23 @@ const int SWAP_CHAIN_SIZE = 3;
 const double NEAR_CLIP_DISTANCE = 0.1;
 const double FAR_CLIP_DISTANCE = 1000.0;
 
-std::vector<varjo_Viewport> createViewportsWithViewDescription(varjo_Session* session)
+std::vector<varjo_Viewport> createViewports(varjo_Session* session)
 {
-    std::vector<varjo_Viewport> viewports;
     const int32_t viewCount = varjo_GetViewCount(session);
+    std::vector<varjo_Viewport> viewports(viewCount);
     int x = 0;
     int y = 0;
+    int32_t width = 0;
+    int32_t height = 0;
     for (int32_t i = 0; i < viewCount; ++i)
     {
-        const varjo_ViewDescription viewDesc = varjo_GetViewDescription(session, i);
-        const varjo_Viewport viewport = varjo_Viewport{x, y, viewDesc.width, viewDesc.height};
-        viewports.push_back(viewport);
-        x += viewport.width;
+        varjo_GetTextureSize(session, varjo_TextureSize_Type_Quad, i, &width, &height);
+        viewports[i] = varjo_Viewport{x, y, width, height};
+        x += viewports[i].width;
         if (i == 1)
         {
             x = 0;
-            y += viewport.height;
+            y += viewports[i].height;
         }
     }
     return viewports;
@@ -49,26 +49,14 @@ std::vector<varjo_LayerMultiProjView> getMultiProjViews(varjo_Session* session,
                                                         varjo_SwapChain* swapChain,
                                                         const std::vector<varjo_Viewport>& viewports)
 {
-    std::vector<varjo_LayerMultiProjView> multiProjectionViews;
     const int32_t viewCount = varjo_GetViewCount(session);
-    multiProjectionViews.resize(viewCount);
+    std::vector<varjo_LayerMultiProjView> multiProjectionViews(viewCount);
     for (int32_t i = 0; i < viewCount; ++i)
     {
         multiProjectionViews[i].viewport = varjo_SwapChainViewport{swapChain, viewports[i].x, viewports[i].y, viewports[i].width, viewports[i].height, 0};
     }
 
     return multiProjectionViews;
-}
-
-glm::mat4 toGlmMat4(const double* matrix)
-{
-    glm::mat4 result;
-    float* dst = glm::value_ptr(result);
-    for (int i = 0; i < 16; ++i)
-    {
-        dst[i] = static_cast<float>(matrix[i]);
-    }
-    return result;
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPWSTR /*lpCmdLine*/, int nCmdShow)
@@ -85,15 +73,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPWSTR /*l
 
     Microsoft::WRL::ComPtr<IDXGIAdapter> adapter = getAdapter(varjo_D3D11GetLuid(session));
 
-    const std::vector<varjo_Viewport> viewports = createViewportsWithViewDescription(session);
+    const std::vector<varjo_Viewport> viewports = createViewports(session);
 
     varjo_SwapChain* colorSwapChain = nullptr;
-    int width = viewports[0].width + viewports[1].width;
-    int height = viewports[0].height + viewports[2].height;
+    const int textureAtlasWidth = viewports[0].width + viewports[1].width; // left context width + right context width
+    const int textureAtlasHeight = viewports[0].height + viewports[2].height; // left context height + left focus height
 
     DX11Renderer renderer;
     renderer.createDevice(adapter);
-    renderer.createSwapChain(session, SWAP_CHAIN_SIZE, width, height, colorSwapChain);
+    renderer.createSwapChain(session, SWAP_CHAIN_SIZE, textureAtlasWidth, textureAtlasHeight, colorSwapChain);
     renderer.createWindow(hInstance, nCmdShow);
     renderer.createDefaultShader();
     renderer.createVertexBuffers();
@@ -135,7 +123,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPWSTR /*l
             glm::mat4 viewMatrix = toGlmMat4(view.viewMatrix);
             glm::mat4 projectionMatrix = toGlmMat4(view.projectionMatrix);
 
-            renderer.bindRenderTarget();
             renderer.setViewAndProjectionMatrix(glm::transpose(viewMatrix), glm::transpose(projectionMatrix));
             renderer.render();
 
